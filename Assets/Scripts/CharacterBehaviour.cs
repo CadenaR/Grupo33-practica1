@@ -32,11 +32,7 @@ namespace Assets.Scripts
             {
 
                 var boardClone = (BoardInfo)BoardManager.boardInfo.Clone();
-				//foreach(GameObject enemy in boardClone.Enemies ){
-				
-					Debug.Log(BoardManager.boardInfo.Enemies.Count);
-				//}
-                LocomotionController.SetNewDirection(PathController.GetNextMove(boardClone,LocomotionController.CurrentEndPosition(),new [] {this.currentTarget}));
+				LocomotionController.SetNewDirection(PathController.GetNextMove(boardClone,LocomotionController.CurrentEndPosition(),new [] {this.currentTarget}));
             }
         }
 

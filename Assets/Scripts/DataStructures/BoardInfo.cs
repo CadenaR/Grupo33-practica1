@@ -187,7 +187,7 @@ namespace Assets.Scripts.DataStructures
 
         public object Clone()
         {
-            var info = new BoardInfo(this.NumColumns, this.NumRows, this.manager) { CellInfos = (CellInfo[,])this.CellInfos.Clone() };
+            var info = new BoardInfo(this.NumColumns, this.NumRows, this.manager) { CellInfos = (CellInfo[,])this.CellInfos.Clone(), Enemies = (List<GameObject>)this.Enemies };
 
             return info;
         }

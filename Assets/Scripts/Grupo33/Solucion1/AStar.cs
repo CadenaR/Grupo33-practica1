@@ -20,11 +20,6 @@ namespace Assets.Scripts.Grupo33.Solucion1
 
 		//Método para movimiento del personaje
 		public override Locomotion.MoveDirection GetNextMove(BoardInfo board, CellInfo currentPos, CellInfo[] goals){
-            foreach (CellInfo cell in board.CellInfos)
-            {
-               // if(cell.ItemInCell.Type != null)
-                    Debug.Log(cell.CellId );
-            }
 			if(!nodesSet){
 				CreateNodesBoard(board);
 				currentPlan = FindPath(board, nodes[currentPos.ColumnId,currentPos.RowId], nodes[goals[0].ColumnId,goals[0].RowId]);
