@@ -7,57 +7,23 @@ using Assets.Scripts.Grupo33.Solucion1;
 
 namespace Assets.Scripts.Grupo33.Solucion2
 {
-    public class SearchEnemy : AbstractPathMind
+    public class SearchEnemy
     {
         private Node[,] nodes { get; set; }
-        private bool nodesSet = false;
         private List<Node> openList;
-        private Stack<int> currentPlan;
-
-        public override void Repath()
-        {
-            currentPlan.Clear();
-            nodes = null;
-            nodesSet = false;
-        }
+		float enemyDist = 999;//Identificador de que todos los enemigos han sido eliminados
+		GameObject enemy;
 
         //Método para movimiento del personaje
-        public override Locomotion.MoveDirection GetNextMove(BoardInfo board, CellInfo currentPos, CellInfo[] goals)
-        {
-            if (!nodesSet)
-            {
-                CreateNodesBoard(board);
-                currentPlan = FindPath(board, nodes[currentPos.ColumnId, currentPos.RowId], nodes[goals[0].ColumnId, goals[0].RowId]);
-                nodesSet = true;
-            }
-            // Se lee el primer elemento del stack para hacer el movimiento segun el caso
-            if (currentPlan.Count() > 0)
-            {
-                int direction = currentPlan.Pop();
-                switch (direction)
-                {
-                    case 0:
-                        return Locomotion.MoveDirection.Up;
-                        break;
+        public int Search(BoardInfo board, CellInfo currentPos, CellInfo[] goals)
+        {	
+            CreateNodesBoard(board, goals[0]);
+            return FindNextMovement(board, nodes[currentPos.ColumnId, currentPos.RowId], nodes[goals[0].ColumnId, goals[0].RowId]);
 
-                    case 1:
-                        return Locomotion.MoveDirection.Right;
-                        break;
-
-                    case 2:
-                        return Locomotion.MoveDirection.Down;
-                        break;
-
-                    case 3:
-                        return Locomotion.MoveDirection.Left;
-                        break;
-                }
-            }
-            return Locomotion.MoveDirection.None;
         }
 
         //Crea el tablero representado en nodos
-        private void CreateNodesBoard(BoardInfo board)
+        private void CreateNodesBoard(BoardInfo board, CellInfo goal)
         {
             int cols = board.NumColumns;
             int rows = board.NumRows;
@@ -70,27 +36,44 @@ namespace Assets.Scripts.Grupo33.Solucion2
                     nodes[i, j] = node;
                 }
             }
+			nodes[goal.ColumnId, goal.RowId].isVisited = true;
         }
 
         /*	
-		Metodo A*: Asigna el nodo de inicio a la lista abierta para luego comenzar a expandir 
-		los nodos vecinos verificando que no fueran visitados anteriormente, posteriormente 
+		Metodo de búsqueda: Primero busca el enemigo mas cercano y lo asigna a una variable global.
+		Teniendo un enemigo como objetivo, asigna el nodo de inicio a la lista abierta para luego comenzar a expandir 
+		los nodos vecinos hasta llegar al nivel 3 (gCos), verificando que no fueran visitados anteriormente, posteriormente 
 		asigna los valores de la fórmula f(n) = g(n) + h(n), asigna la dirección que fue tomada
 		para llegar a ellos y como nodo padre el nodo que se esta expandiendo. Finalmente se agrega
-		a la lista abierta cada nodo no visitado, se elimina el actual y se ordena la lista abierta.
+		a la lista abierta cada nodo no visitado, se elimina el actual y se ordena la lista abierta, para regresar el primer 
+		noto que se encuentre en el nivel 3, ya que al estar ordenada la lista, es el mas cercano para realizar el movimiento.
 		*/
-        private Stack<int> FindPath(BoardInfo board, Node start, Node goal)
+        private int FindNextMovement(BoardInfo board, Node start, Node goal)
         {
+			foreach(GameObject enem in board.Enemies){
+				if(enem != null){
+					float manhattanD = ManhatanDistance(start, enem.transform.position.x, enem.transform.position.y);
+					if(manhattanD < enemyDist){
+						enemyDist = manhattanD;
+						enemy = enem;
+					}
+				}
+			}
+			if(enemy == null){
+				return 9999;
+			}
             openList = new List<Node>();
             openList.Add(start);
             start.gCost = 0.0f;
-            start.fCost = ManhatanDistance(start, goal);
+            start.fCost = enemyDist;
             Node node = null;
             while (openList.Count != 0)
             {
-                node = openList.First();
-                //Check if the current node is the target node
-                if (node.position == goal.position)
+                node = openList[0];
+				if(node.gCost >= 3){
+					return CalculatePath(node);
+				}
+                if (node.position[0] == (int)enemy.transform.position.x && node.position[1] == (int)enemy.transform.position.y)
                 {
                     return CalculatePath(node);
                 }
@@ -103,7 +86,7 @@ namespace Assets.Scripts.Grupo33.Solucion2
                     int y = neighbourNode[1];
                     if (!nodes[x, y].isVisited)
                     {
-                        float neighbourHCost = ManhatanDistance(nodes[x, y], goal);
+                        float neighbourHCost = ManhatanDistance(nodes[x, y], enemy.transform.position.x, enemy.transform.position.y);
                         nodes[x, y].gCost += node.gCost;
                         nodes[x, y].parent = node;
                         nodes[x, y].direction = neighbourNode[2];
@@ -120,11 +103,6 @@ namespace Assets.Scripts.Grupo33.Solucion2
                 //se elimina de la lista abierta
                 openList.Remove(node);
                 openList.Sort();
-            }
-            if (node.position != goal.position)
-            {
-                Debug.LogError("Goal Not Found");
-                return null;
             }
             return CalculatePath(node);
         }
@@ -148,23 +126,26 @@ namespace Assets.Scripts.Grupo33.Solucion2
             return neighbours;
         }
 
-        // Calcula distancia Manhattan entre nodo actual y la meta
-        private float ManhatanDistance(Node curNode, Node goalNode)
+        // Calcula distancia Manhattan entre nodo actual y el enemigo
+        private float ManhatanDistance(Node curNode, float x, float y)
         {
-            return (Mathf.Abs(goalNode.position[0] - curNode.position[0]) + Mathf.Abs(goalNode.position[1] - curNode.position[1]));
+            return (Mathf.Abs(x - curNode.position[0]) + Mathf.Abs(y - curNode.position[1]));
         }
 
-        //Ingresa las direcciones en número entero al stack, comenzando por la meta
-        private Stack<int> CalculatePath(Node node)
+        //Ingresa las direcciones en número entero a la lista comenzando por la meta y regresa la dirección del primer nodo hijo
+        private int CalculatePath(Node node)
         {
-            Stack<int> stack = new Stack<int>();
+            List<int> movements = new List<int>();
             while (node != null)
             {
-                stack.Push(node.direction);
+				
+				movements.Add(node.direction);
                 node = node.parent;
             }
-
-            return stack;
+			
+			if (movements.Count() > 1)
+				return movements[movements.Count()-2];
+			return -1;
         }
     }
 }

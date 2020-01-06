@@ -2,6 +2,7 @@
 using System.Linq;
 //using System.Runtime.Remoting.Messaging;
 using Assets.Scripts.DataStructures;
+using Assets.Scripts.Grupo33.Solucion2;
 using UnityEngine;
 
 namespace Assets.Scripts.Grupo33.Solucion1
@@ -11,6 +12,8 @@ namespace Assets.Scripts.Grupo33.Solucion1
 		private bool nodesSet = false;
 		private List<Node> openList;
 		private Stack<int> currentPlan;
+		int direction = -1;
+		private bool allEliminated = false;
 
 		public override void Repath()
         {
@@ -20,33 +23,43 @@ namespace Assets.Scripts.Grupo33.Solucion1
 
 		//Método para movimiento del personaje
 		public override Locomotion.MoveDirection GetNextMove(BoardInfo board, CellInfo currentPos, CellInfo[] goals){
-			if(!nodesSet){
-				CreateNodesBoard(board);
-				currentPlan = FindPath(board, nodes[currentPos.ColumnId,currentPos.RowId], nodes[goals[0].ColumnId,goals[0].RowId]);
-				nodesSet = true;
-			}
-			// Se lee el primer elemento del stack para hacer el movimiento segun el caso
-			if(currentPlan.Count() > 0){
-				int direction = currentPlan.Pop();
-				switch(direction){
-					case 0:
-						return Locomotion.MoveDirection.Up;
-						break;
-
-					case 1:
-						return Locomotion.MoveDirection.Right;
-						break;
-
-					case 2:
-						return Locomotion.MoveDirection.Down;
-						break;
-
-					case 3:
-						return Locomotion.MoveDirection.Left;
-						break;						
+			//si hay enemigos en la lista y aun no han sido eliminados, procede a perseguirlos
+			if(!allEliminated){
+				SearchEnemy getEnemy = new SearchEnemy();
+				direction = getEnemy.Search(board, currentPos, goals);
+				if(direction == 9999)
+					allEliminated = true;
+			}		
+			else{ //Al no haber enemigos, avanza a la meta
+				if(!nodesSet){
+					CreateNodesBoard(board);
+					currentPlan = FindPath(board, nodes[currentPos.ColumnId,currentPos.RowId], nodes[goals[0].ColumnId,goals[0].RowId]);
+					nodesSet = true;
+				} 
+				if(currentPlan.Count() > 0){
+					direction = currentPlan.Pop();
 				}
+
 			}
-			return Locomotion.MoveDirection.None;
+			// Se lee el número asignado a "direction" para hacer el movimiento segun el caso
+			switch(direction){
+				case 0:
+					return Locomotion.MoveDirection.Up;
+
+				case 1:
+					return Locomotion.MoveDirection.Right;
+
+				case 2:
+					return Locomotion.MoveDirection.Down;
+
+				case 3:
+					return Locomotion.MoveDirection.Left;
+				
+				default:
+					return Locomotion.MoveDirection.None;
+			}
+			
+			
 		}
 
 		//Crea el tablero representado en nodos
@@ -76,7 +89,7 @@ namespace Assets.Scripts.Grupo33.Solucion1
 			start.fCost = ManhatanDistance(start, goal);
 			Node node = null;
 			while (openList.Count != 0) {
-				node = openList.First();
+				node = openList[0];
 					//Check if the current node is the target node
 				if (node.position == goal.position ) {
 					return CalculatePath(node);
