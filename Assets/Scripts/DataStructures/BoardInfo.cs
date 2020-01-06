@@ -124,7 +124,7 @@ namespace Assets.Scripts.DataStructures
                 enemy.GetComponent<EnemyBehaviour>().BoardManager = manager;
                 var itemlogic = enemy.GetComponentInChildren<ItemLogic>();
                 itemlogic.PlaceableItem = itemInfo;
-
+				Enemies.Add(enemy);
                 
                 emptyCells = this.EmptyCells;
             }
