@@ -90,7 +90,7 @@ namespace Assets.Scripts.Grupo33.Solucion1
 			Node node = null;
 			while (openList.Count != 0) {
 				node = openList[0];
-					//Check if the current node is the target node
+					//Revisa si el nodo actual es el nodo meta
 				if (node.position == goal.position ) {
 					return CalculatePath(node);
 				}
@@ -102,9 +102,9 @@ namespace Assets.Scripts.Grupo33.Solucion1
 					int y = neighbourNode[1];
 					if (!nodes[x,y].isVisited) {
 						float neighbourHCost = ManhatanDistance(nodes[x,y], goal);
-						nodes[x,y].gCost += node.gCost;
-						nodes[x,y].parent = node;
-						nodes[x,y].direction = neighbourNode[2];
+						nodes[x,y].gCost += node.gCost; //Asigna el nuevo costo al vecino
+						nodes[x,y].parent = node; //Asigna al nodo vecino el nodo padre (nodo actual)
+						nodes[x,y].direction = neighbourNode[2]; // Asigna la dirección tomada para llegar a él
 						nodes[x,y].fCost = nodes[x,y].gCost + neighbourHCost;
 						if (!openList.Contains(nodes[x,y])) {
 							openList.Add(nodes[x,y]);

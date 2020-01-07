@@ -50,6 +50,7 @@ namespace Assets.Scripts.Grupo33.Solucion2
 		*/
         private int FindNextMovement(BoardInfo board, Node start, Node goal)
         {
+			// Obtiene el enemigo mas cercano para la iteración en curso
 			foreach(GameObject enem in board.Enemies){
 				if(enem != null){
 					float manhattanD = ManhatanDistance(start, enem.transform.position.x, enem.transform.position.y);
@@ -59,9 +60,10 @@ namespace Assets.Scripts.Grupo33.Solucion2
 					}
 				}
 			}
-			if(enemy == null){
+			if(enemy == null){ // cuando todos los enemigos han sido eliminados  regresa 9999
 				return 9999;
 			}
+
             openList = new List<Node>();
             openList.Add(start);
             start.gCost = 0.0f;
@@ -70,9 +72,11 @@ namespace Assets.Scripts.Grupo33.Solucion2
             while (openList.Count != 0)
             {
                 node = openList[0];
+				// Si el nodo en curso tiene gCost 3, significa que esta en nivel 3 y regresa la función "CalculatePath" con este nodo
 				if(node.gCost >= 3){
 					return CalculatePath(node);
 				}
+				// si el nodo actual tiene la misma posición que el enemigo, regresa la función "CalculatePath" con este nodo
                 if (node.position[0] == (int)enemy.transform.position.x && node.position[1] == (int)enemy.transform.position.y)
                 {
                     return CalculatePath(node);
@@ -132,20 +136,17 @@ namespace Assets.Scripts.Grupo33.Solucion2
             return (Mathf.Abs(x - curNode.position[0]) + Mathf.Abs(y - curNode.position[1]));
         }
 
-        //Ingresa las direcciones en número entero a la lista comenzando por la meta y regresa la dirección del primer nodo hijo
+        //Recorre todos los nodos padres desde el nodo recibido y regresa la dirección del primer hijo en entero
         private int CalculatePath(Node node)
         {
-            List<int> movements = new List<int>();
-            while (node != null)
+            int movement = -1;
+            while (node.parent != null)
             {
-				
-				movements.Add(node.direction);
+				movement = node.direction;
                 node = node.parent;
             }
 			
-			if (movements.Count() > 1)
-				return movements[movements.Count()-2];
-			return -1;
+			return movement;
         }
     }
 }
